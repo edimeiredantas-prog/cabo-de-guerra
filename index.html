@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cabo de Guerra Educacional - Arena do Conhecimento</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Fredoka & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        game: ['Fredoka', 'cursive'],
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#3B82F6',
+                            purple: '#8B5CF6',
+                            pink: '#EC4899',
+                            yellow: '#F59E0B',
+                            green: '#10B981',
+                            red: '#EF4444'
+                        }
+                    },
+                    animation: {
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-fast': 'pulse 1s infinite',
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both',
+                        'rope-pull-left': 'pullLeft 0.4s ease-out',
+                        'rope-pull-right': 'pullRight 0.4s ease-out',
+                    },
+                    keyframes: {
+                        shake: {
+                            '10%, 90%': { transform: 'translate3d(-1px, 0, 0)' },
+                            '20%, 80%': { transform: 'translate3d(2px, 0, 0)' },
+                            '30%, 50%, 70%': { transform: 'translate3d(-4px, 0, 0)' },
+                            '40%, 60%': { transform: 'translate3d(4px, 0, 0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, 'Inter', sans-serif;
+            user-select: none;
+        }
+        
+        .rope-pattern {
+            background: repeating-linear-gradient(
+                45deg,
+                #d97706,
+                #d97706 15px,
+                #b45309 15px,
+                #b45309 30px
+            );
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.3);
+            border-radius: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.6);
+        }
+
+        .avatar-glow-p1 {
+            filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.6));
+        }
+        .avatar-glow-p2 {
+            filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.6));
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-purple-500 selection:text-white">
+
+    <!-- Header Top Navigation -->
+    <header class="w-full bg-slate-800/80 backdrop-blur-md border-b border-slate-700/60 sticky top-0 z-50 px-4 py-3">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="app.showScreen('welcomeScreen')">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-500 flex items-center justify-center text-white text-xl font-black shadow-lg shadow-purple-500/30">
+                    <i class="fa-solid fa-people-pulling"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-wide bg-gradient-to-r from-purple-400 via-pink-400 to-amber-300 bg-clip-text text-transparent leading-none">
+                        Cabo de Guerra
+                    </h1>
+                    <span class="text-xs text-slate-400 font-sans tracking-wider uppercase font-semibold">Arena Educacional</span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <div id="userInfoBadge" class="hidden items-center bg-slate-700/60 px-3 py-1.5 rounded-full border border-slate-600 text-xs font-sans">
+                    <span class="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse mr-2"></span>
+                    <span id="badgeText" class="font-medium text-slate-200"></span>
+                </div>
+                <button onclick="app.toggleSound()" id="soundToggleBtn" class="w-9 h-9 rounded-xl bg-slate-700/80 hover:bg-slate-600 text-slate-200 flex items-center justify-center transition" title="Alternar Som">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+                <button onclick="app.showScreen('welcomeScreen')" class="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-semibold text-slate-200 transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Início</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container for Screens -->
+    <main class="flex-grow flex items-center justify-center p-4 relative z-10">
+
+        <!-- SCREEN 1: Welcome & Profile Selection -->
+        <section id="welcomeScreen" class="w-full max-w-4xl transition-all duration-300">
+            <div class="text-center mb-8">
+                <div class="inline-block p-3 bg-purple-500/10 rounded-3xl border border-purple-500/20 mb-4 animate-bounce-slow">
+                    <span class="text-5xl">🪢</span>
+                </div>
+                <h2 class="text-4xl sm:text-5xl font-black tracking-tight text-white mb-3">
+                    Aprenda Puxando a Corda!
+                </h2>
+                <p class="text-slate-400 text-base sm:text-lg max-w-xl mx-auto font-sans">
+                    Desafie seus colegas em duelos 1v1 do conhecimento. Acerte as perguntas, puxe o cabo e conquiste o torneio!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                <!-- Card Aluno -->
+                <div onclick="app.selectProfile('student')" class="group relative bg-gradient-to-b from-slate-800 to-slate-800/90 hover:from-blue-900/40 hover:to-slate-800 border-2 border-slate-700 hover:border-blue-500 rounded-3xl p-6 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-blue-500/20 flex flex-col justify-between">
+                    <div class="absolute -top-3 right-6 bg-blue-500 text-white text-xs font-bold font-sans uppercase px-3 py-1 rounded-full shadow-md">
+                        Competidor
+                    </div>
+                    <div>
+                        <div class="w-16 h-16 rounded-2xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-3xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-gamepad"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-2">Sou Aluno</h3>
+                        <p class="text-slate-400 text-sm font-sans mb-6">
+                            Entre com o código fornecido pelo seu professor e prepare-se para o combate no torneio.
+                        </p>
+                    </div>
+                    <button class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold tracking-wide shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition">
+                        Entrar na Arena <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Card Professor -->
+                <div onclick="app.selectProfile('teacher')" class="group relative bg-gradient-to-b from-slate-800 to-slate-800/90 hover:from-purple-900/40 hover:to-slate-800 border-2 border-slate-700 hover:border-purple-500 rounded-3xl p-6 cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-purple-500/20 flex flex-col justify-between">
+                    <div class="absolute -top-3 right-6 bg-purple-500 text-white text-xs font-bold font-sans uppercase px-3 py-1 rounded-full shadow-md">
+                        Organizador
+                    </div>
+                    <div>
+                        <div class="w-16 h-16 rounded-2xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400 text-3xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-chalkboard-user"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-2">Sou Professor</h3>
+                        <p class="text-slate-400 text-sm font-sans mb-6">
+                            Crie salas, gerencie questões customizadas, configure o tempo de partida e controle os torneios.
+                        </p>
+                    </div>
+                    <button class="w-full py-3 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold tracking-wide shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition">
+                        Painel do Professor <i class="fa-solid fa-sliders"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: Student Join Screen -->
+        <section id="studentJoinScreen" class="w-full max-w-md hidden">
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
+                <button onclick="app.showScreen('welcomeScreen')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-white">Entrar na Sala</h2>
+                    <p class="text-slate-400 text-xs font-sans mt-1">Preencha seus dados para entrar na arena</p>
+                </div>
+
+                <form onsubmit="app.joinRoom(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold font-sans text-slate-300 uppercase mb-2">Código da Sala</label>
+                        <div class="relative">
+                            <input type="text" id="joinCodeInput" required uppercase maxlength="6" placeholder="EX: 1234" class="w-full bg-slate-900 border-2 border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-center text-2xl tracking-widest font-mono font-bold text-yellow-400 placeholder-slate-600 outline-none transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold font-sans text-slate-300 uppercase mb-2">Seu Nome / Nickname</label>
+                        <input type="text" id="joinNameInput" required maxlength="15" placeholder="Ex: Lucas Ninja" class="w-full bg-slate-900 border-2 border-slate-700 focus:border-blue-500 rounded-xl px-4 py-3 text-slate-100 font-sans font-medium outline-none transition">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold font-sans text-slate-300 uppercase mb-2">Escolha seu Avatar</label>
+                        <div class="grid grid-cols-5 gap-2" id="avatarSelector">
+                            <!-- Avatars generated dynamically -->
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold tracking-wide shadow-lg shadow-blue-500/25 transition mt-4">
+                        Entrar na Partida 🚀
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: Teacher Dashboard -->
+        <section id="teacherDashboardScreen" class="w-full max-w-6xl hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Left Column: Manage Rooms & Active Tournament -->
+                <div class="lg:col-span-1 space-y-6">
+                    <!-- Create Room Box -->
+                    <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 shadow-xl">
+                        <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-plus-circle text-purple-400"></i>
+                            Criar Nova Sala
+                        </h3>
+
+                        <div class="space-y-4 font-sans">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Código Personalizado (Opcional)</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="newRoomCodeInput" placeholder="Auto" maxlength="6" class="w-full bg-slate-900 border border-slate-700 focus:border-purple-500 rounded-xl px-3 py-2 text-center font-mono font-bold text-yellow-400 uppercase outline-none">
+                                    <button onclick="app.generateRandomRoomCode()" class="px-3 bg-slate-700 hover:bg-slate-600 rounded-xl text-slate-200 text-xs font-semibold">
+                                        Gerar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Tempo de Combate (Segundos)</label>
+                                <select id="newRoomTimerInput" class="w-full bg-slate-900 border border-slate-700 focus:border-purple-500 rounded-xl px-3 py-2 text-slate-200 outline-none">
+                                    <option value="30">30 Segundos (Rápido)</option>
+                                    <option value="60" selected>60 Segundos (Padrão)</option>
+                                    <option value="90">90 Segundos (Médio)</option>
+                                    <option value="120">120 Segundos (Longo)</option>
+                                    <option value="0">Sem Limite de Tempo</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Disciplina Principal</label>
+                                <select id="newRoomSubjectInput" class="w-full bg-slate-900 border border-slate-700 focus:border-purple-500 rounded-xl px-3 py-2 text-slate-200 outline-none">
+                                    <option value="Geral">Todas as Disciplinas</option>
+                                    <option value="Matemática">Matemática</option>
+                                    <option value="Português">Português</option>
+                                    <option value="Ciências">Ciências</option>
+                                    <option value="História">História</option>
+                                    <option value="Geografia">Geografia</option>
+                                </select>
+                            </div>
+
+                            <button onclick="app.createRoom()" class="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold font-game tracking-wide shadow-lg shadow-purple-600/30 transition">
+                                Abrir Sala de Partida
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Room Status Card -->
+                    <div id="teacherRoomControlCard" class="bg-slate-800 border border-slate-700 rounded-3xl p-6 shadow-xl hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <span class="text-xs uppercase text-slate-400 font-bold font-sans">Sala Ativa</span>
+                                <h4 id="teacherActiveCode" class="text-3xl font-mono font-bold text-yellow-400 tracking-wider">----</h4>
+                            </div>
+                            <span id="teacherRoomStatusBadge" class="px-3 py-1 rounded-full text-xs font-bold font-sans bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                LOBBY ABERTO
+                            </span>
+                        </div>
+
+                        <div class="space-y-3 font-sans">
+                            <div class="flex justify-between text-sm text-slate-300 py-1 border-b border-slate-700">
+                                <span>Alunos Conectados:</span>
+                                <span id="teacherConnectedCount" class="font-bold text-white">0</span>
+                            </div>
+
+                            <div class="flex gap-2">
+                                <button onclick="app.addBotPlayer()" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-xs font-semibold text-slate-200 rounded-xl transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-robot text-purple-400"></i> + Add Bot
+                                </button>
+                                <button onclick="app.copyRoomLink()" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-xs font-semibold text-slate-200 rounded-xl transition flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-copy"></i> Copiar Cód.
+                                </button>
+                            </div>
+
+                            <button onclick="app.startTournamentFromTeacher()" class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold font-game rounded-xl shadow-lg shadow-emerald-500/20 transition mt-2">
+                                <i class="fa-solid fa-play mr-1"></i> INICIAR TORNEIO
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Question Bank & Student Monitor Tabs -->
+                <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-3xl p-6 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <!-- Tabs Navigation -->
+                        <div class="flex border-b border-slate-700 mb-6 gap-4 font-sans text-sm font-bold">
+                            <button onclick="app.switchTeacherTab('questions')" id="tabBtnQuestions" class="pb-3 border-b-2 border-purple-500 text-purple-400 transition">
+                                <i class="fa-solid fa-book-open mr-1.5"></i> Banco de Perguntas (<span id="totalQuestionsCount">0</span>)
+                            </button>
+                            <button onclick="app.switchTeacherTab('students')" id="tabBtnStudents" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">
+                                <i class="fa-solid fa-users mr-1.5"></i> Jogadores na Sala (<span id="teacherTabStudentCount">0</span>)
+                            </button>
+                        </div>
+
+                        <!-- TAB 1: Questions Bank -->
+                        <div id="teacherTabQuestions" class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-lg font-bold text-white">Perguntas Cadastradas</h4>
+                                <button onclick="app.openQuestionModal()" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition font-sans">
+                                    <i class="fa-solid fa-plus"></i> Nova Pergunta
+                                </button>
+                            </div>
+
+                            <div id="questionsListContainer" class="space-y-3 max-h-[380px] overflow-y-auto custom-scrollbar pr-2">
+                                <!-- List of questions dynamic -->
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: Connected Students & Bracket Monitor -->
+                        <div id="teacherTabStudents" class="space-y-4 hidden">
+                            <h4 class="text-lg font-bold text-white">Alunos Conectados na Sala</h4>
+                            <div id="teacherStudentsList" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto custom-scrollbar">
+                                <!-- Students cards -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SCREEN 4: Lobby & Bracket Waiting Screen -->
+        <section id="lobbyScreen" class="w-full max-w-4xl hidden">
+            <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 sm:p-8 shadow-2xl">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-center pb-6 border-b border-slate-700/80 gap-4">
+                    <div>
+                        <span class="text-xs uppercase text-slate-400 font-bold font-sans">SALA DE ESPERA</span>
+                        <h2 class="text-3xl font-bold text-white flex items-center gap-3">
+                            Código: <span id="lobbyRoomCode" class="font-mono text-yellow-400">----</span>
+                        </h2>
+                    </div>
+                    <div class="flex items-center gap-3 bg-slate-900/80 px-4 py-2 rounded-2xl border border-slate-700">
+                        <div class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></div>
+                        <span id="lobbyStatusText" class="text-xs font-sans font-semibold text-slate-300">Aguardando o professor iniciar...</span>
+                    </div>
+                </div>
+
+                <!-- Players Joined Grid -->
+                <div class="my-6">
+                    <h3 class="text-sm font-bold font-sans text-slate-400 uppercase mb-3">Jogadores no Lobby (<span id="lobbyPlayerCount">0</span>)</h3>
+                    <div id="lobbyPlayersGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <!-- Dynamic list of avatars -->
+                    </div>
+                </div>
+
+                <!-- Tournament Bracket Visualizer -->
+                <div id="bracketSection" class="mt-8 border-t border-slate-700 pt-6">
+                    <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-sitemap text-purple-400"></i>
+                        Chaveamento do Torneio
+                    </h3>
+                    <div id="bracketContainer" class="bg-slate-900/80 rounded-2xl p-4 border border-slate-700/60 min-h-[180px] flex items-center justify-center overflow-x-auto custom-scrollbar">
+                        <span class="text-slate-500 font-sans text-sm">O chaveamento será gerado assim que o torneio iniciar.</span>
+                    </div>
+                </div>
+
+                <div id="studentReadyNotice" class="mt-6 p-4 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-center font-sans text-sm text-blue-300 hidden">
+                    🎯 <strong>Sua vez está chegando!</strong> Mantenha esta tela aberta. O duelo começará em instantes.
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 5: GAMEPLAY ARENA (CABO DE GUERRA) -->
+        <section id="arenaScreen" class="w-full max-w-4xl hidden">
+            <div id="arenaCard" class="bg-slate-800 border-2 border-slate-700 rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden transition-all">
+                
+                <!-- Match Top Bar -->
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <div class="flex items-center gap-2 font-sans">
+                        <span class="px-3 py-1 bg-purple-500/20 text-purple-300 text-xs font-bold rounded-lg border border-purple-500/30" id="arenaRoundTitle">
+                            Rodada 1
+                        </span>
+                    </div>
+                    
+                    <!-- Timer -->
+                    <div class="flex items-center gap-2 bg-slate-900 px-4 py-1.5 rounded-2xl border border-slate-700">
+                        <i class="fa-solid fa-stopwatch text-amber-400 text-lg"></i>
+                        <span id="arenaTimer" class="font-mono text-2xl font-bold text-amber-400">60s</span>
+                    </div>
+
+                    <div id="arenaMatchStatus" class="text-xs font-sans text-slate-400 font-semibold">
+                        Duelo em Andamento
+                    </div>
+                </div>
+
+                <!-- TUG OF WAR ANIMATION CANVAS & ROPE INTERFACE -->
+                <div class="bg-slate-900/90 rounded-2xl p-4 sm:p-6 border border-slate-700 my-4 relative shadow-inner">
+                    
+                    <!-- Tug of War Avatars Header -->
+                    <div class="flex justify-between items-center mb-4 relative z-10">
+                        <!-- Player 1 (Left) -->
+                        <div class="flex items-center gap-3">
+                            <div id="p1AvatarBox" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-blue-600/30 border-2 border-blue-500 flex items-center justify-center text-3xl shadow-lg transition-transform">
+                                🧑‍🎓
+                            </div>
+                            <div>
+                                <h4 id="p1Name" class="font-bold text-base sm:text-lg text-blue-400">Jogador A</h4>
+                                <div class="text-xs font-sans text-slate-400">Pontos: <span id="p1Score" class="font-bold text-white">0</span></div>
+                            </div>
+                        </div>
+
+                        <!-- VS Center Badge -->
+                        <div class="w-10 h-10 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center font-black text-amber-400 text-sm shadow-md">
+                            VS
+                        </div>
+
+                        <!-- Player 2 (Right) -->
+                        <div class="flex items-center gap-3 flex-row-reverse text-right">
+                            <div id="p2AvatarBox" class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-red-600/30 border-2 border-red-500 flex items-center justify-center text-3xl shadow-lg transition-transform">
+                                🤖
+                            </div>
+                            <div>
+                                <h4 id="p2Name" class="font-bold text-base sm:text-lg text-red-400">Oponente</h4>
+                                <div class="text-xs font-sans text-slate-400">Pontos: <span id="p2Score" class="font-bold text-white">0</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ROPE TRACK VISUALIZER -->
+                    <div class="relative py-6 my-2">
+                        <!-- Center Indicator Line -->
+                        <div class="absolute left-1/2 top-0 bottom-0 w-1 bg-amber-400/50 z-0 transform -translate-x-1/2"></div>
+                        
+                        <!-- Limit Marker Left -->
+                        <div class="absolute left-[5%] top-2 bottom-2 w-1.5 bg-blue-500 rounded-full z-0"></div>
+                        <!-- Limit Marker Right -->
+                        <div class="absolute right-[5%] top-2 bottom-2 w-1.5 bg-red-500 rounded-full z-0"></div>
+
+                        <!-- The Moving Rope Ribbon Container -->
+                        <div id="ropeContainer" class="relative w-full h-8 flex items-center transition-all duration-300 ease-out" style="transform: translateX(0%);">
+                            <!-- Cable / Rope -->
+                            <div class="w-full h-4 rope-pattern rounded-full shadow-md relative flex items-center justify-center">
+                                <!-- Center Red Flag -->
+                                <div class="w-6 h-10 bg-red-600 rounded-sm shadow-lg flex items-center justify-center border border-yellow-300 transform -translate-y-1">
+                                    <span class="text-xs">🚩</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Traction Meter Bar -->
+                    <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden border border-slate-700 mt-2 flex">
+                        <div id="meterP1" class="bg-blue-500 h-full transition-all duration-300" style="width: 50%;"></div>
+                        <div id="meterP2" class="bg-red-500 h-full transition-all duration-300" style="width: 50%;"></div>
+                    </div>
+                </div>
+
+                <!-- QUIZ CONTAINER -->
+                <div id="quizBox" class="mt-6 bg-slate-900/60 rounded-2xl p-5 border border-slate-700/80">
+                    <div class="flex justify-between items-center mb-3">
+                        <span id="questionSubjectTag" class="text-xs font-sans font-bold px-2.5 py-1 bg-purple-500/20 text-purple-300 rounded-md border border-purple-500/30 uppercase">
+                            Geral
+                        </span>
+                        <span class="text-xs font-sans text-slate-400">Responda para puxar a corda!</span>
+                    </div>
+
+                    <h3 id="questionText" class="text-xl sm:text-2xl font-bold text-white mb-6 leading-relaxed">
+                        Carregando pergunta...
+                    </h3>
+
+                    <!-- 4 Options Grid -->
+                    <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 font-sans">
+                        <!-- Options generated dynamically -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SCREEN 6: Victory & Podium Screen -->
+        <section id="victoryScreen" class="w-full max-w-2xl hidden">
+            <div class="bg-slate-800 border-2 border-slate-700 rounded-3xl p-6 sm:p-8 shadow-2xl text-center relative overflow-hidden">
+                <div class="inline-block p-4 bg-amber-500/20 rounded-full border border-amber-500/30 mb-4 animate-bounce">
+                    <span class="text-6xl">🏆</span>
+                </div>
+
+                <h2 class="text-3xl sm:text-4xl font-black text-white mb-2">Fim de Torneio!</h2>
+                <p id="winnerAnnouncement" class="text-amber-400 font-bold text-xl mb-6">Parabéns aos grandes campeões!</p>
+
+                <!-- Podium Representation -->
+                <div id="podiumContainer" class="flex justify-center items-end gap-3 my-8 min-h-[160px]">
+                    <!-- Podium dynamic render -->
+                </div>
+
+                <div class="flex gap-4 font-sans justify-center">
+                    <button onclick="app.showScreen('welcomeScreen')" class="px-6 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold transition">
+                        Voltar ao Início
+                    </button>
+                    <button onclick="app.restartRoomOrNew()" class="px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold shadow-lg shadow-purple-600/30 transition">
+                        Nova Partida
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal: Add New Question (Teacher) -->
+    <div id="questionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 w-full max-w-lg shadow-2xl font-sans relative">
+            <button onclick="app.closeQuestionModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 class="text-xl font-bold font-game text-white mb-4">Cadastrar Nova Pergunta</h3>
+
+            <form onsubmit="app.saveCustomQuestion(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Disciplina</label>
+                    <select id="modalQuestionSubject" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm outline-none">
+                        <option value="Matemática">Matemática</option>
+                        <option value="Português">Português</option>
+                        <option value="Ciências">Ciências</option>
+                        <option value="História">História</option>
+                        <option value="Geografia">Geografia</option>
+                        <option value="Geral">Geral</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Pergunta</label>
+                    <textarea id="modalQuestionText" required rows="2" placeholder="Digite o enunciado da pergunta..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200 text-sm outline-none"></textarea>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-300 uppercase">Alternativas (Marque a correta)</label>
+                    
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="correctOpt" value="0" checked class="w-4 h-4 text-purple-600">
+                        <input type="text" id="opt0" required placeholder="Opção 1" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm outline-none">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="correctOpt" value="1" class="w-4 h-4 text-purple-600">
+                        <input type="text" id="opt1" required placeholder="Opção 2" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm outline-none">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="correctOpt" value="2" class="w-4 h-4 text-purple-600">
+                        <input type="text" id="opt2" required placeholder="Opção 3" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm outline-none">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="radio" name="correctOpt" value="3" class="w-4 h-4 text-purple-600">
+                        <input type="text" id="opt3" required placeholder="Opção 4" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 text-sm outline-none">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-3">
+                    <button type="button" onclick="app.closeQuestionModal()" class="px-4 py-2 bg-slate-700 text-slate-200 text-xs font-bold rounded-xl">Cancelar</button>
+                    <button type="submit" class="px-5 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-600/30">Salvar Pergunta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full py-3 text-center text-xs text-slate-500 font-sans border-t border-slate-800/80 bg-slate-900/50">
+        <p>Cabo de Guerra Educacional &copy; 2026 • Plataforma Gamificada de Aprendizagem</p>
+    </footer>
+
+    <!-- JAVASCRIPT APPLICATION CORE LOGIC -->
+    <script>
+        // Initial Default Question Bank
+        const DEFAULT_QUESTIONS = [
+            { id: 'q1', subject: 'Matemática', text: 'Quanto é 7 x 8?', options: ['54', '56', '62', '48'], correct: 1 },
+            { id: 'q2', subject: 'Matemática', text: 'Qual é a raiz quadrada de 81?', options: ['7', '8', '9', '10'], correct: 2 },
+            { id: 'q3', subject: 'Português', text: 'Qual das palavras é um substantivo próprio?', options: ['Cachorro', 'Brasil', 'Caneta', 'Felicidade'], correct: 1 },
+            { id: 'q4', subject: 'Português', text: 'Qual é o antônimo de "Corajoso"?', options: ['Valente', 'Covarde', 'Forte', 'Otimista'], correct: 1 },
+            { id: 'q5', subject: 'Ciências', text: 'Qual o maior órgão do corpo humano?', options: ['Fígado', 'Coração', 'Pele', 'Pulmão'], correct: 2 },
+            { id: 'q6', subject: 'Ciências', text: 'Qual gás os seres humanos absorvem do ar na respiração?', options: ['Gás Carbônico', 'Nitrogênio', 'Oxigênio', 'Hélio'], correct: 2 },
+            { id: 'q7', subject: 'História', text: 'Em que ano ocorreu a Proclamação da República no Brasil?', options: ['1500', '1822', '1889', '1988'], correct: 2 },
+            { id: 'q8', subject: 'Geografia', text: 'Qual é o maior continente do planeta em área terrestre?', options: ['América', 'Ásia', 'África', 'Europa'], correct: 1 },
+            { id: 'q9', subject: 'Geografia', text: 'Qual é a capital da França?', options: ['Londres', 'Roma', 'Madri', 'Paris'], correct: 3 },
+            { id: 'q10', subject: 'Geral', text: 'Quantas cores tem o arco-íris principal?', options: ['5', '6', '7', '8'], correct: 2 }
+        ];
+
+        const AVATARS = ['🧑‍🎓', '🦁', '🤖', '🦊', '🚀', '🐱', '🐲', '🐼', '🦄', '🐸'];
+
+        class GameApp {
+            constructor() {
+                this.profile = null; // 'teacher' | 'student'
+                this.currentUser = null; // { id, name, avatar }
+                this.currentRoom = null;
+                this.questions = JSON.parse(localStorage.getItem('tug_questions')) || DEFAULT_QUESTIONS;
+                this.soundEnabled = true;
+
+                // Sync engine across browser tabs using BroadcastChannel
+                this.bc = new BroadcastChannel('tug_of_war_game_sync');
+                this.bc.onmessage = (e) => this.handleSyncMessage(e.data);
+
+                // Match State Local Variables
+                this.activeMatch = null; // { round, p1, p2, p1Score, p2Score, ropePosition: -100 to 100, timeLeft, timerInterval, currentQuestionIndex }
+                this.selectedAvatar = AVATARS[0];
+            }
+
+            init() {
+                this.renderAvatars();
+                this.renderQuestionsList();
+                this.showScreen('welcomeScreen');
+            }
+
+            // Sync Engine for Multi-Tab & Multi-Player support
+            broadcast(type, payload) {
+                this.bc.postMessage({ type, payload, senderId: this.currentUser ? this.currentUser.id : 'teacher' });
+            }
+
+            handleSyncMessage(msg) {
+                const { type, payload } = msg;
+
+                if (type === 'ROOM_UPDATED') {
+                    if (this.currentRoom && this.currentRoom.code === payload.code) {
+                        this.currentRoom = payload;
+                        this.updateLobbyUI();
+                        this.updateTeacherUI();
+                    }
+                } else if (type === 'TORUNAMENT_STARTED') {
+                    if (this.currentRoom && this.currentRoom.code === payload.code) {
+                        this.currentRoom = payload;
+                        this.checkStudentMatchAssignment();
+                    }
+                } else if (type === 'MATCH_PULL') {
+                    if (this.activeMatch && this.activeMatch.id === payload.matchId) {
+                        this.activeMatch.ropePosition += payload.delta;
+                        if (payload.player === 1) this.activeMatch.p1Score++;
+                        else this.activeMatch.p2Score++;
+                        this.updateArenaUI();
+                    }
+                }
+            }
+
+            // Screen Navigation Handler
+            showScreen(screenId) {
+                const screens = ['welcomeScreen', 'studentJoinScreen', 'teacherDashboardScreen', 'lobbyScreen', 'arenaScreen', 'victoryScreen'];
+                screens.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('hidden');
+                });
+
+                const target = document.getElementById(screenId);
+                if (target) target.classList.remove('hidden');
+
+                // Update Header Badge
+                const badge = document.getElementById('userInfoBadge');
+                const badgeText = document.getElementById('badgeText');
+                if (this.currentUser) {
+                    badge.classList.remove('hidden');
+                    badge.classList.add('flex');
+                    badgeText.innerText = `${this.currentUser.avatar} ${this.currentUser.name}`;
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            selectProfile(profileType) {
+                this.profile = profileType;
+                if (profileType === 'teacher') {
+                    this.currentUser = { id: 'teacher', name: 'Professor(a)', avatar: '👨‍🏫' };
+                    this.showScreen('teacherDashboardScreen');
+                    this.updateTeacherUI();
+                } else {
+                    this.showScreen('studentJoinScreen');
+                }
+            }
+
+            renderAvatars() {
+                const grid = document.getElementById('avatarSelector');
+                if (!grid) return;
+                grid.innerHTML = '';
+                AVATARS.forEach((av, idx) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `p-2.5 text-2xl rounded-xl border-2 transition ${idx === 0 ? 'border-blue-500 bg-blue-500/20' : 'border-slate-700 bg-slate-900'}`;
+                    btn.innerText = av;
+                    btn.onclick = () => {
+                        Array.from(grid.children).forEach(c => c.className = 'p-2.5 text-2xl rounded-xl border-2 border-slate-700 bg-slate-900');
+                        btn.className = 'p-2.5 text-2xl rounded-xl border-2 border-blue-500 bg-blue-500/20';
+                        this.selectedAvatar = av;
+                    };
+                    grid.appendChild(btn);
+                });
+            }
+
+            joinRoom(e) {
+                e.preventDefault();
+                const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+                const name = document.getElementById('joinNameInput').value.trim();
+
+                if (!code || !name) return;
+
+                this.currentUser = {
+                    id: 'usr_' + Math.random().toString(36).substr(2, 6),
+                    name: name,
+                    avatar: this.selectedAvatar,
+                    score: 0
+                };
+
+                // Retrieve room from state/localStorage
+                let room = JSON.parse(localStorage.getItem('room_' + code));
+                if (!room) {
+                    // Create simulated fallback room if code does not exist
+                    room = {
+                        code: code,
+                        subject: 'Geral',
+                        timer: 60,
+                        players: [],
+                        status: 'lobby'
+                    };
+                }
+
+                // Add player if not already in
+                if (!room.players.find(p => p.id === this.currentUser.id)) {
+                    room.players.push(this.currentUser);
+                    localStorage.setItem('room_' + code, JSON.stringify(room));
+                }
+
+                this.currentRoom = room;
+                this.broadcast('ROOM_UPDATED', room);
+
+                this.showScreen('lobbyScreen');
+                this.updateLobbyUI();
+            }
+
+            // TEACHER ACTIONS
+            generateRandomRoomCode() {
+                const code = Math.floor(1000 + Math.random() * 9000).toString();
+                document.getElementById('newRoomCodeInput').value = code;
+            }
+
+            createRoom() {
+                const customCode = document.getElementById('newRoomCodeInput').value.trim().toUpperCase();
+                const timer = parseInt(document.getElementById('newRoomTimerInput').value);
+                const subject = document.getElementById('newRoomSubjectInput').value;
+
+                const roomCode = customCode || Math.floor(1000 + Math.random() * 9000).toString();
+
+                this.currentRoom = {
+                    code: roomCode,
+                    timer: timer,
+                    subject: subject,
+                    players: [],
+                    status: 'lobby',
+                    brackets: []
+                };
+
+                localStorage.setItem('room_' + roomCode, JSON.stringify(this.currentRoom));
+
+                document.getElementById('teacherRoomControlCard').classList.remove('hidden');
+                document.getElementById('teacherActiveCode').innerText = roomCode;
+
+                this.updateTeacherUI();
+                this.showScreen('teacherDashboardScreen');
+            }
+
+            addBotPlayer() {
+                if (!this.currentRoom) return;
+                const botNames = ['Robô Einstein', 'Bot Turing', 'Dev Coder', 'Sofia Bot', 'Lucas Bot', 'Super Bot'];
+                const botName = botNames[Math.floor(Math.random() * botNames.length)] + ' #' + Math.floor(Math.random() * 90);
+                
+                const bot = {
+                    id: 'bot_' + Math.random().toString(36).substr(2, 5),
+                    name: botName,
+                    avatar: '🤖',
+                    isBot: true,
+                    score: 0
+                };
+
+                this.currentRoom.players.push(bot);
+                localStorage.setItem('room_' + this.currentRoom.code, JSON.stringify(this.currentRoom));
+                this.broadcast('ROOM_UPDATED', this.currentRoom);
+                this.updateTeacherUI();
+            }
+
+            copyRoomLink() {
+                if (!this.currentRoom) return;
+                navigator.clipboard.writeText(this.currentRoom.code);
+                alert(`Código da Sala ${this.currentRoom.code} copiado para a área de transferência!`);
+            }
+
+            updateTeacherUI() {
+                if (!this.currentRoom) return;
+
+                document.getElementById('teacherConnectedCount').innerText = this.currentRoom.players.length;
+                document.getElementById('teacherTabStudentCount').innerText = this.currentRoom.players.length;
+
+                const list = document.getElementById('teacherStudentsList');
+                if (!list) return;
+                list.innerHTML = '';
+
+                if (this.currentRoom.players.length === 0) {
+                    list.innerHTML = `<p class="text-slate-500 font-sans text-xs col-span-2">Nenhum aluno conectado ainda.</p>`;
+                    return;
+                }
+
+                this.currentRoom.players.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-900 border border-slate-700 rounded-xl p-3 flex items-center justify-between font-sans';
+                    card.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${p.avatar}</span>
+                            <div>
+                                <h5 class="font-bold text-sm text-slate-100">${p.name}</h5>
+                                <span class="text-[10px] ${p.isBot ? 'text-amber-400' : 'text-blue-400'} font-bold uppercase">${p.isBot ? 'Jogador Robô' : 'Aluno Real'}</span>
+                            </div>
+                        </div>
+                        <span class="text-xs font-mono font-bold text-slate-400">ID: ${p.id.substr(0, 5)}</span>
+                    `;
+                    list.appendChild(card);
+                });
+            }
+
+            switchTeacherTab(tab) {
+                const btnQ = document.getElementById('tabBtnQuestions');
+                const btnS = document.getElementById('tabBtnStudents');
+                const tabQ = document.getElementById('teacherTabQuestions');
+                const tabS = document.getElementById('teacherTabStudents');
+
+                if (tab === 'questions') {
+                    btnQ.className = 'pb-3 border-b-2 border-purple-500 text-purple-400 transition';
+                    btnS.className = 'pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition';
+                    tabQ.classList.remove('hidden');
+                    tabS.classList.add('hidden');
+                } else {
+                    btnS.className = 'pb-3 border-b-2 border-purple-500 text-purple-400 transition';
+                    btnQ.className = 'pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition';
+                    tabS.classList.remove('hidden');
+                    tabQ.classList.add('hidden');
+                }
+            }
+
+            // QUESTIONS MANAGEMENT
+            renderQuestionsList() {
+                const container = document.getElementById('questionsListContainer');
+                const totalCounter = document.getElementById('totalQuestionsCount');
+                if (!container) return;
+
+                totalCounter.innerText = this.questions.length;
+                container.innerHTML = '';
+
+                this.questions.forEach((q, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-900 border border-slate-700/80 rounded-xl p-3 font-sans text-xs flex justify-between items-start';
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="px-2 py-0.5 bg-purple-500/20 text-purple-300 font-bold rounded text-[10px]">${q.subject}</span>
+                                <span class="text-slate-400">#${idx + 1}</span>
+                            </div>
+                            <h5 class="font-semibold text-slate-200 text-sm mb-2">${q.text}</h5>
+                            <div class="grid grid-cols-2 gap-1 text-slate-400">
+                                ${q.options.map((opt, oIdx) => `<span class="${oIdx === q.correct ? 'text-emerald-400 font-bold' : ''}">• ${opt}</span>`).join('')}
+                            </div>
+                        </div>
+                        <button onclick="app.deleteQuestion('${q.id}')" class="text-slate-500 hover:text-red-400 transition p-1">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            openQuestionModal() {
+                document.getElementById('questionModal').classList.remove('hidden');
+            }
+
+            closeQuestionModal() {
+                document.getElementById('questionModal').classList.add('hidden');
+            }
+
+            saveCustomQuestion(e) {
+                e.preventDefault();
+                const subject = document.getElementById('modalQuestionSubject').value;
+                const text = document.getElementById('modalQuestionText').value.trim();
+                const opts = [
+                    document.getElementById('opt0').value.trim(),
+                    document.getElementById('opt1').value.trim(),
+                    document.getElementById('opt2').value.trim(),
+                    document.getElementById('opt3').value.trim()
+                ];
+                const correct = parseInt(document.querySelector('input[name="correctOpt"]:checked').value);
+
+                const newQ = {
+                    id: 'q_' + Date.now(),
+                    subject: subject,
+                    text: text,
+                    options: opts,
+                    correct: correct
+                };
+
+                this.questions.push(newQ);
+                localStorage.setItem('tug_questions', JSON.stringify(this.questions));
+                this.renderQuestionsList();
+                this.closeQuestionModal();
+            }
+
+            deleteQuestion(id) {
+                this.questions = this.questions.filter(q => q.id !== id);
+                localStorage.setItem('tug_questions', JSON.stringify(this.questions));
+                this.renderQuestionsList();
+            }
+
+            // TOURNAMENT & MATCHMAKING ENGINE
+            startTournamentFromTeacher() {
+                if (!this.currentRoom || this.currentRoom.players.length < 2) {
+                    alert('É necessário ter pelo menos 2 jogadores para iniciar o torneio!');
+                    return;
+                }
+
+                // Shuffle players for random bracket matchmaking
+                let pool = [...this.currentRoom.players].sort(() => Math.random() - 0.5);
+
+                const round1Matches = [];
+                for (let i = 0; i < pool.length; i += 2) {
+                    if (i + 1 < pool.length) {
+                        round1Matches.push({
+                            id: 'm1_' + i,
+                            p1: pool[i],
+                            p2: pool[i + 1],
+                            winner: null
+                        });
+                    } else {
+                        // Odd number of players -> Automatic BYE
+                        round1Matches.push({
+                            id: 'm1_' + i,
+                            p1: pool[i],
+                            p2: { id: 'bye', name: 'Passagem Direta (Bye)', avatar: '⭐', isBot: true },
+                            winner: pool[i]
+                        });
+                    }
+                }
+
+                this.currentRoom.status = 'active';
+                this.currentRoom.brackets = [round1Matches];
+                localStorage.setItem('room_' + this.currentRoom.code, JSON.stringify(this.currentRoom));
+
+                this.broadcast('TORUNAMENT_STARTED', this.currentRoom);
+                this.updateLobbyUI();
+
+                // If teacher is running, automatically trigger arena duel for preview or bot handling
+                this.checkStudentMatchAssignment();
+            }
+
+            checkStudentMatchAssignment() {
+                if (!this.currentRoom || !this.currentRoom.brackets.length) return;
+
+                const currentRound = this.currentRoom.brackets[this.currentRoom.brackets.length - 1];
+                let myMatch = null;
+
+                if (this.profile === 'teacher') {
+                    // Teacher views first active match
+                    myMatch = currentRound.find(m => !m.winner);
+                } else {
+                    // Find match where current user is participating
+                    myMatch = currentRound.find(m => (m.p1.id === this.currentUser.id || m.p2.id === this.currentUser.id) && !m.winner);
+                }
+
+                if (myMatch) {
+                    if (myMatch.winner) {
+                        // Automatic victory due to BYE
+                        alert('Você passou de fase automaticamente nesta rodada!');
+                        return;
+                    }
+                    this.startMatchArena(myMatch);
+                } else {
+                    this.showScreen('lobbyScreen');
+                    this.updateLobbyUI();
+                }
+            }
+
+            updateLobbyUI() {
+                if (!this.currentRoom) return;
+
+                document.getElementById('lobbyRoomCode').innerText = this.currentRoom.code;
+                document.getElementById('lobbyPlayerCount').innerText = this.currentRoom.players.length;
+
+                const grid = document.getElementById('lobbyPlayersGrid');
+                grid.innerHTML = '';
+                this.currentRoom.players.forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-900 border border-slate-700/80 rounded-2xl p-3 flex items-center gap-3 font-sans';
+                    card.innerHTML = `
+                        <span class="text-3xl">${p.avatar}</span>
+                        <div class="truncate">
+                            <h5 class="font-bold text-sm text-slate-100 truncate">${p.name}</h5>
+                            <span class="text-[10px] text-slate-400 font-medium">Pronto para a luta</span>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                // Render Tournament Bracket
+                const bracketContainer = document.getElementById('bracketContainer');
+                if (this.currentRoom.brackets && this.currentRoom.brackets.length > 0) {
+                    bracketContainer.innerHTML = '';
+                    const bracketWrapper = document.createElement('div');
+                    bracketWrapper.className = 'flex gap-8 items-center py-2 font-sans';
+
+                    this.currentRoom.brackets.forEach((round, rIdx) => {
+                        const roundCol = document.createElement('div');
+                        roundCol.className = 'flex flex-col gap-3 min-w-[200px]';
+                        roundCol.innerHTML = `<h5 class="text-xs font-bold text-purple-400 uppercase tracking-wider text-center mb-1">Rodada ${rIdx + 1}</h5>`;
+
+                        round.forEach(m => {
+                            const matchCard = document.createElement('div');
+                            matchCard.className = 'bg-slate-800 border border-slate-700 rounded-xl p-2.5 shadow-md space-y-1.5 text-xs';
+                            matchCard.innerHTML = `
+                                <div class="flex justify-between items-center ${m.winner && m.winner.id === m.p1.id ? 'text-emerald-400 font-bold' : 'text-slate-300'}">
+                                    <span>${m.p1.avatar} ${m.p1.name}</span>
+                                    <span>${m.p1Score !== undefined ? m.p1Score : ''}</span>
+                                </div>
+                                <div class="h-[1px] bg-slate-700 my-1"></div>
+                                <div class="flex justify-between items-center ${m.winner && m.winner.id === m.p2.id ? 'text-emerald-400 font-bold' : 'text-slate-300'}">
+                                    <span>${m.p2.avatar} ${m.p2.name}</span>
+                                    <span>${m.p2Score !== undefined ? m.p2Score : ''}</span>
+                                </div>
+                            `;
+                            roundCol.appendChild(matchCard);
+                        });
+
+                        bracketWrapper.appendChild(roundCol);
+                    });
+
+                    bracketContainer.appendChild(bracketWrapper);
+                }
+            }
+
+            // ARENA & GAMEPLAY MECHANICS
+            startMatchArena(match) {
+                // Filter questions for the room subject
+                let pool = this.questions;
+                if (this.currentRoom && this.currentRoom.subject !== 'Geral') {
+                    const filtered = this.questions.filter(q => q.subject === this.currentRoom.subject);
+                    if (filtered.length > 0) pool = filtered;
+                }
+
+                this.activeMatch = {
+                    id: match.id,
+                    p1: match.p1,
+                    p2: match.p2,
+                    p1Score: 0,
+                    p2Score: 0,
+                    ropePosition: 0, // -100 (P1 Maximum Pull) to +100 (P2 Maximum Pull)
+                    timeLeft: this.currentRoom ? this.currentRoom.timer : 60,
+                    questionPool: [...pool].sort(() => Math.random() - 0.5),
+                    currentQuestionIndex: 0
+                };
+
+                this.showScreen('arenaScreen');
+                this.updateArenaUI();
+                this.loadNextQuestion();
+
+                // Start Timer
+                if (this.activeMatch.timeLeft > 0) {
+                    clearInterval(this.activeMatch.timerInterval);
+                    this.activeMatch.timerInterval = setInterval(() => {
+                        this.activeMatch.timeLeft--;
+                        document.getElementById('arenaTimer').innerText = `${this.activeMatch.timeLeft}s`;
+
+                        // Bot Automated Answer Logic Simulation
+                        if (this.activeMatch.p2.isBot && Math.random() < 0.3) {
+                            this.simulateBotAnswer();
+                        }
+
+                        if (this.activeMatch.timeLeft <= 0) {
+                            clearInterval(this.activeMatch.timerInterval);
+                            this.endMatch();
+                        }
+                    }, 1000);
+                }
+            }
+
+            loadNextQuestion() {
+                if (!this.activeMatch) return;
+
+                const q = this.activeMatch.questionPool[this.activeMatch.currentQuestionIndex % this.activeMatch.questionPool.length];
+                
+                document.getElementById('questionSubjectTag').innerText = q.subject;
+                document.getElementById('questionText').innerText = q.text;
+
+                const grid = document.getElementById('optionsGrid');
+                grid.innerHTML = '';
+
+                q.options.forEach((opt, idx) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'p-4 bg-slate-800 hover:bg-slate-700 border-2 border-slate-700 hover:border-purple-500 rounded-xl text-left text-slate-100 font-semibold transition flex items-center justify-between group';
+                    btn.innerHTML = `
+                        <span>${opt}</span>
+                        <div class="w-6 h-6 rounded-full border-2 border-slate-600 group-hover:border-purple-400 flex items-center justify-center text-xs font-mono font-bold">
+                            ${String.fromCharCode(65 + idx)}
+                        </div>
+                    `;
+                    btn.onclick = () => this.handleAnswer(idx, q.correct, btn);
+                    grid.appendChild(btn);
+                });
+            }
+
+            handleAnswer(selectedIndex, correctIndex, btnElement) {
+                if (!this.activeMatch) return;
+
+                const isP1 = !this.currentUser || this.currentUser.id === this.activeMatch.p1.id;
+                const isCorrect = selectedIndex === correctIndex;
+
+                if (isCorrect) {
+                    btnElement.classList.add('bg-emerald-600/30', 'border-emerald-500', 'text-emerald-300');
+                    // Pull rope towards contestant (-25% for P1, +25% for P2)
+                    const pullDelta = isP1 ? -25 : 25;
+                    this.activeMatch.ropePosition += pullDelta;
+
+                    if (isP1) this.activeMatch.p1Score++;
+                    else this.activeMatch.p2Score++;
+
+                    this.broadcast('MATCH_PULL', { matchId: this.activeMatch.id, delta: pullDelta, player: isP1 ? 1 : 2 });
+                } else {
+                    btnElement.classList.add('bg-red-600/30', 'border-red-500', 'text-red-300', 'animate-shake');
+                }
+
+                // Update UI Visuals
+                this.updateArenaUI();
+
+                // Check Win Condition by Rope Limit (-100 or +100)
+                if (Math.abs(this.activeMatch.ropePosition) >= 100) {
+                    clearInterval(this.activeMatch.timerInterval);
+                    setTimeout(() => this.endMatch(), 600);
+                    return;
+                }
+
+                // Advance to Next Question
+                this.activeMatch.currentQuestionIndex++;
+                setTimeout(() => this.loadNextQuestion(), 800);
+            }
+
+            simulateBotAnswer() {
+                if (!this.activeMatch) return;
+                // Bot answers with 65% accuracy
+                const isCorrect = Math.random() < 0.65;
+                if (isCorrect) {
+                    this.activeMatch.ropePosition += 20; // Pulls towards P2 (Bot)
+                    this.activeMatch.p2Score++;
+                    this.updateArenaUI();
+
+                    if (this.activeMatch.ropePosition >= 100) {
+                        clearInterval(this.activeMatch.timerInterval);
+                        this.endMatch();
+                    }
+                }
+            }
+
+            updateArenaUI() {
+                if (!this.activeMatch) return;
+
+                document.getElementById('p1Name').innerText = this.activeMatch.p1.name;
+                document.getElementById('p1AvatarBox').innerText = this.activeMatch.p1.avatar;
+                document.getElementById('p1Score').innerText = this.activeMatch.p1Score;
+
+                document.getElementById('p2Name').innerText = this.activeMatch.p2.name;
+                document.getElementById('p2AvatarBox').innerText = this.activeMatch.p2.avatar;
+                document.getElementById('p2Score').innerText = this.activeMatch.p2Score;
+
+                // Clamp Rope Position between -100 and 100
+                const pos = Math.max(-100, Math.min(100, this.activeMatch.ropePosition));
+                
+                // Rope Container Offset in %
+                const ropeContainer = document.getElementById('ropeContainer');
+                ropeContainer.style.transform = `translateX(${pos * 0.4}%)`;
+
+                // Meters Bar Adjustment
+                const p1Percent = 50 - (pos / 2);
+                const p2Percent = 50 + (pos / 2);
+                document.getElementById('meterP1').style.width = `${p1Percent}%`;
+                document.getElementById('meterP2').style.width = `${p2Percent}%`;
+            }
+
+            endMatch() {
+                if (!this.activeMatch) return;
+
+                let winner = null;
+                if (this.activeMatch.ropePosition < 0) {
+                    winner = this.activeMatch.p1;
+                } else if (this.activeMatch.ropePosition > 0) {
+                    winner = this.activeMatch.p2;
+                } else {
+                    // Tie-breaker by highest score
+                    winner = this.activeMatch.p1Score >= this.activeMatch.p2Score ? this.activeMatch.p1 : this.activeMatch.p2;
+                }
+
+                // Confetti Animation for Winner
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+
+                // Record Match Outcome in Tournament State
+                if (this.currentRoom && this.currentRoom.brackets) {
+                    const currentRound = this.currentRoom.brackets[this.currentRoom.brackets.length - 1];
+                    const m = currentRound.find(x => x.id === this.activeMatch.id);
+                    if (m) {
+                        m.winner = winner;
+                        m.p1Score = this.activeMatch.p1Score;
+                        m.p2Score = this.activeMatch.p2Score;
+                    }
+
+                    // Check if current round complete
+                    const allDone = currentRound.every(x => x.winner !== null);
+                    if (allDone) {
+                        const winners = currentRound.map(x => x.winner);
+                        if (winners.length > 1) {
+                            // Generate Next Round Brackets
+                            const nextRound = [];
+                            for (let i = 0; i < winners.length; i += 2) {
+                                if (i + 1 < winners.length) {
+                                    nextRound.push({
+                                        id: `m${this.currentRoom.brackets.length + 1}_${i}`,
+                                        p1: winners[i],
+                                        p2: winners[i + 1],
+                                        winner: null
+                                    });
+                                } else {
+                                    nextRound.push({
+                                        id: `m${this.currentRoom.brackets.length + 1}_${i}`,
+                                        p1: winners[i],
+                                        p2: { id: 'bye', name: 'Bye', avatar: '⭐', isBot: true },
+                                        winner: winners[i]
+                                    });
+                                }
+                            }
+                            this.currentRoom.brackets.push(nextRound);
+                        }
+                    }
+
+                    localStorage.setItem('room_' + this.currentRoom.code, JSON.stringify(this.currentRoom));
+                    this.broadcast('ROOM_UPDATED', this.currentRoom);
+                }
+
+                this.showVictoryScreen(winner);
+            }
+
+            showVictoryScreen(winner) {
+                this.showScreen('victoryScreen');
+                document.getElementById('winnerAnnouncement').innerText = `🎉 Vencedor do combate: ${winner.avatar} ${winner.name}!`;
+
+                const podiumContainer = document.getElementById('podiumContainer');
+                podiumContainer.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <span class="text-4xl mb-1">${winner.avatar}</span>
+                        <div class="w-24 bg-amber-500 rounded-t-2xl h-28 flex items-center justify-center font-bold text-slate-900 text-xl shadow-lg">
+                            1º Lugar
+                        </div>
+                        <span class="text-xs font-bold text-slate-200 mt-2">${winner.name}</span>
+                    </div>
+                `;
+            }
+
+            restartRoomOrNew() {
+                if (this.profile === 'teacher') {
+                    this.showScreen('teacherDashboardScreen');
+                } else {
+                    this.showScreen('welcomeScreen');
+                }
+            }
+
+            toggleSound() {
+                this.soundEnabled = !this.soundEnabled;
+                const btn = document.getElementById('soundToggleBtn');
+                btn.innerHTML = this.soundEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
+            }
+        }
+
+        // Initialize App on Window Load
+        let app;
+        window.onload = function() {
+            app = new GameApp();
+            app.init();
+        };
+    </script>
+</body>
+</html>
